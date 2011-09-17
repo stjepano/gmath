@@ -82,11 +82,11 @@ public:
 	Mat44& invert();
 };
 
-void TransformVector( const Mat44& m, const Vec3& vec, Vec3& out);
-void TransformVectors( const Mat44& m, int n, Vec3* in, Vec3* out);
+void TransformVector( const Mat44& m, const Vec3& vec, Vec3* out);
+void TransformVectors( const Mat44& m, int n, const Vec3* in, Vec3* out);
 
-void Transpose( const Mat44& m, Mat44& out );
-void Inverse( const Mat44& m, Mat44& out );
+void Transpose( const Mat44& m, Mat44* out );
+void Inverse( const Mat44& m, Mat44* out );
 
 
 Mat44 ConstructRotXMatrix(float angleDeg);

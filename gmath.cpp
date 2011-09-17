@@ -164,10 +164,10 @@ Mat44 Mat44::operator *(const Mat44& o) const {
 	
 	for ( int col = 0; col < 4; col++) {
 		for (int row = 0; row < 4; row++) {
-			result.el(row,col) = 	this->el(row,col+0) * o.el(row+0,col) + 
-									this->el(row,col+1) * o.el(row+1,col) + 
-									this->el(row,col+2) * o.el(row+2,col) + 
-									this->el(row,col+3) * o.el(row+3,col);
+			result.el(row,col) = 	this->el(row,0) * o.el(0,col) + 
+									this->el(row,1) * o.el(1,col) + 
+									this->el(row,2) * o.el(2,col) + 
+									this->el(row,3) * o.el(3,col);
 		}
 	}
 	
@@ -178,10 +178,10 @@ Mat44& Mat44::operator *=(const Mat44& o) {
 	float results[16];
 	for ( int col = 0; col < 4; col++) {
 		for (int row = 0; row < 4; row++ ) {
-			results[col*4+row] = 	this->el(row,col+0) * o.el(row+0,col) + 
-									this->el(row,col+1) * o.el(row+1,col) + 
-									this->el(row,col+2) * o.el(row+2,col) + 
-									this->el(row,col+3) * o.el(row+3,col);
+			results[col*4+row] = 	this->el(row,0) * o.el(0,col) + 
+									this->el(row,1) * o.el(1,col) + 
+									this->el(row,2) * o.el(2,col) + 
+									this->el(row,3) * o.el(3,col);
 		}
 	}
 	memcpy(EL,results,sizeof(float)*16);
@@ -211,6 +211,7 @@ float Mat44::determinant() const {
 				EL[13] * EL[3] * EL[6] * EL[8] - EL[1] * EL[14] * EL[7] * EL[8] + EL[13] * EL[2] * EL[7] * EL[8] + 
 				EL[15] * EL[2] * EL[4] * EL[9] - EL[14] * EL[3] * EL[4] * EL[9] - EL[0] * EL[15] * EL[6] * EL[9] + 
 				EL[12] * EL[3] * EL[6] * EL[9] + EL[0] * EL[14] * EL[7] * EL[9] - EL[12] * EL[2] * EL[7] * EL[9];
+
 	return det;
 }
 
@@ -237,18 +238,18 @@ Mat44& Mat44::invert() {
 	for ( int i = 0; i < 16; i++) 
 		inv[i] *= oneOverDet;
 		
-	memcpy(EL,inv,sizeof(16));
+	memcpy(EL,inv,sizeof(float)*16);
 	return *this;
 }
 
 
-void TransformVector(const Mat44& m, const Vec3& vIn, Vec3& vOut) {
-	vOut.X = m.E00*vIn.X + m.E01*vIn.Y + m.E02*vIn.Z + m.E03*vIn.W;
-	vOut.Y = m.E10*vIn.X + m.E11*vIn.Y + m.E12*vIn.Z + m.E13*vIn.W;
-	vOut.Z = m.E20*vIn.X + m.E21*vIn.Y + m.E22*vIn.Z + m.E23*vIn.W;
+void TransformVector(const Mat44& m, const Vec3& vIn, Vec3* vOut) {
+	vOut->X = m.E00*vIn.X + m.E01*vIn.Y + m.E02*vIn.Z + m.E03*vIn.W;
+	vOut->Y = m.E10*vIn.X + m.E11*vIn.Y + m.E12*vIn.Z + m.E13*vIn.W;
+	vOut->Z = m.E20*vIn.X + m.E21*vIn.Y + m.E22*vIn.Z + m.E23*vIn.W;
 }
 
-void TransformVectors(const Mat44& m, int n, Vec3* in, Vec3* out) {
+void TransformVectors(const Mat44& m, int n, const Vec3* in, Vec3* out) {
 	for ( int i = 0; i < n; i++ ) {
 		const Vec3& vIn = in[i];
 		Vec3& vOut = out[i];
@@ -259,14 +260,14 @@ void TransformVectors(const Mat44& m, int n, Vec3* in, Vec3* out) {
 }
 
 
-void Transpose( const Mat44& m, Mat44& out ) {
-	out = m;
-	out.transpose();
+void Transpose( const Mat44& m, Mat44* out ) {
+	(*out) = m;
+	out->transpose();
 }
 
-void Inverse( const Mat44& m, Mat44& out ) {
-	out = m;
-	out.invert();
+void Inverse( const Mat44& m, Mat44* out ) {
+	(*out) = m;
+	out->invert();
 }
 
 Mat44 ConstructRotXMatrix(float angleDeg) {
@@ -314,9 +315,11 @@ Mat44 ConstructRotMatrix(float angleDeg, const Vec3& axis) {
 	float c = cosf(angle);
 	float s = sinf(angle);
 	
-	float ax = axis.X;
-	float ay = axis.Y;
-	float az = axis.Z;
+	float l = axis.length();
+	
+	float ax = axis.X/l;
+	float ay = axis.Y/l;
+	float az = axis.Z/l;
 	
 	m.E00 = c+(1-c)*SQR(ax);
 	m.E01 = (1-c)*ax*ay - s*az;
